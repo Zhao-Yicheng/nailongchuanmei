@@ -1,21 +1,21 @@
 # 奶龙传媒学院
 
-本仓库是 [www.奶龙传媒学院.com](https://www.xn--dpqu5wnyaiyf17sktl.com/) 的源代码。站点部署于阿里云 ESA，为纯静态网页（HTML / CSS / JS，零依赖、无构建步骤），仓库更新后自动同步部署。
+本仓库是 [www.奶龙传媒学院.com](https://www.xn--dpqu5wnyaiyf17sktl.com/) 的源代码。站点部署于阿里云 ESA，为纯静态网页，仓库更新后自动同步部署。
+
+直接进入[www.奶龙传媒学院.com](https://www.xn--dpqu5wnyaiyf17sktl.com/)为tmp分支，[test.奶龙传媒学院.com](https://test.xn--dpqu5wnyaiyf17sktl.com/)为本main分支
 
 页面复刻自 [www.中国奶龙大学.com](https://www.xn--fiqs8srwb9iv6f6w9n.com/) 的开场动画与全屏扇形校区转盘，校名改为「奶龙传媒学院」。
 
 ## 免责声明
 
-本站仅供娱乐，与浙江传媒学院官方无任何关系。站内素材照搬自原站，后续将逐步替换为原创内容。
+本站仅供娱乐，与浙江传媒学院官方无任何关系。站内素材照搬自原站，后续将逐步替换。
 
 ## 贡献
 
 欢迎浙传的奶龙爱好者参与贡献 —— 前端代码（动画、性能、可访问性）与艺术设计（校徽 logo、校区图等）均可提交 Issue 或 PR，或进群讨论。
 
-<div align="center">
-<img src="resource/QQ.jpg" alt="QQ 群二维码" width="240">
-<p>奶龙交流 QQ 群</p>
-</div>
+## QQ交流群
+![预览](resource/QQ.jpg)
 
 ## 待办
 
