@@ -13,6 +13,8 @@
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preload" as="image" type="image/webp" href="assets/ring.webp">
 <link rel="preload" as="image" type="image/webp" href="assets/core.webp">
+<link rel="preload" as="image" type="image/webp" href="assets/campus-mtgc.webp">
+<link rel="preload" as="image" type="image/webp" href="assets/campus-cuz.webp">
 <!-- 有 JS 时先播开场动画再显示校区；没有 JS 时直接显示校区 -->
 <script>document.documentElement.classList.add('js')</script>
 <style>
@@ -90,13 +92,16 @@
   .choosing .sectors { opacity: 1; visibility: visible; transition: opacity .6s ease .2s, visibility 0s; }
   .wheel { position: absolute; inset: 0; }
   .choosing .wheel { animation: spin var(--period) linear var(--spin-delay) infinite; }
-  .sector { position: absolute; inset: 0; color: #fff; text-decoration: none; cursor: pointer; outline: none; }
+  .sector { position: absolute; inset: 0; color: #fff; text-decoration: none; cursor: pointer; outline: none; background-size: cover; background-position: center; }
 
-  /* 截图铺满全屏、反向旋转保持不动；扇区转到哪里就透出哪里 */
+  /* 截图铺满全屏、反向旋转保持不动；扇区转到哪里就透出哪里。
+     模糊占位底图以 CSS 背景内联（零请求，首屏即渲染），清晰截图加载完后淡入盖上 */
   .sector img {
-    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-    filter: brightness(.78); transition: filter .35s, scale .9s cubic-bezier(.2, .7, .2, 1);
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0;
+    filter: brightness(.78); transition: filter .35s, scale .9s cubic-bezier(.2, .7, .2, 1), opacity .9s ease;
   }
+  .sector img.loaded { opacity: 1; }
+  html:not(.js) .sector img { opacity: 1; }
   .js .sector img { scale: 1.08; }
   .choosing .sector img { scale: 1; animation: unspin var(--period) linear var(--spin-delay) infinite; }
   .sector:hover img, .sector:focus-visible img { filter: none; scale: 1.03; }
@@ -221,12 +226,12 @@
     <!-- 无 JS 时的静态兜底：默认两个校区（与下方 CAMPUSES 配置一致） -->
     <a class="sector" href="https://mtgc.cuz.edu.cn/" aria-label="奶龙传媒学院媒体工程学院"
        style="clip-path: polygon(50% 50%, calc(50% - 150vmax) 50%, 50% calc(50% - 150vmax), calc(50% + 150vmax) 50%)">
-      <img src="resource/媒体工程学院.png" alt="" width="2459" height="1395">
+      <img src="assets/campus-mtgc.webp" alt="" width="1920" height="1090">
       <span class="sector-label" style="left: 50%; top: calc(50% - 27vmin)"><small>奶龙传媒学院</small><b>媒体工程学院</b></span>
     </a>
     <a class="sector" href="https://www.cuz.edu.cn/" aria-label="奶龙传媒学院总校官网"
        style="clip-path: polygon(50% 50%, calc(50% + 150vmax) 50%, 50% calc(50% + 150vmax), calc(50% - 150vmax) 50%)">
-      <img src="resource/总校官网.png" alt="" width="2459" height="1395">
+      <img src="assets/campus-cuz.webp" alt="" width="1920" height="1090">
       <span class="sector-label" style="left: 50%; top: calc(50% + 27vmin)"><small>奶龙传媒学院</small><b>总校官网</b></span>
     </a>
     <i class="ray" style="--a: 180deg"></i>
@@ -255,13 +260,19 @@
   /* ==================== 校区配置 ====================
      想改成 3 / 4 / 5 个校区：只需在下面数组里增删条目，保存刷新即可。
      - name  校区名（显示在大字）
-     - img   校区截图（放在 assets/ 下，或填外链）
+     - img   校区截图（建议 1920 宽 webp；原始大图见 resource/，用 PIL 等工具转一下）
      - href  点击后跳转的网址
-     扇形、射线数量、标签位置都会按数量自动重算，无其它需要改的地方。 */
+     扇形、射线数量、标签位置都会按数量自动重算，无其它需要改的地方。
+     LQIP（模糊占位底图，key 对应上面的 img 路径）：内联 base64、零额外请求，
+     清晰图就绪前先以 CSS 背景渲染；换图后想保留该效果，用同款图重生成即可。 */
+  const LQIP = {
+    "assets/campus-mtgc.webp": "data:image/webp;base64,UklGRqoAAABXRUJQVlA4IJ4AAACQBgCdASowABsAPqFEmUmmJCKhOrZoAMAUCWIAnTAGhFky34M3MmWewRBap5WegR40H2irqozxjws3BfGAAP6jaqQf2BqsxAgUui0mfTJ79ZlNspJpi+29LMamat0FOf3eUHE6vD2OFebbCMp3RCiJuuVcXj3agRTVLLjcgIv3L3fz/xzC0ptPGTIJWX0dEy7SZl644/oz/kvSjChAAA==",
+    "assets/campus-cuz.webp": "data:image/webp;base64,UklGRsgAAABXRUJQVlA4ILwAAABwBgCdASowABsAPqU8m0mmIyKhOrmYAMAUiWgAnTNHOred8Q8FvQFgi5xfMJ72B4+/sh8NyXXj2HribgAA/uRYuXZx665g2BQH4f+LxLWo3KP/f3TW0zRMB+FlMhGki73L52AKHJC+1u2Sn4dMWHlRx8Ywniy+zRPNgC25qD6sQLYTYoDhNugkaDQdVzy8JbkdgTCyn0SLEWy5CRErt9J7eC0IQcxmZip1sNF21FXVPgpq4bi9vevKs8sAAA==",
+  };
   const UNIV = "奶龙传媒学院";
   const CAMPUSES = [
-    { name: "媒体工程学院", img: "resource/媒体工程学院.png", href: "https://mtgc.cuz.edu.cn/" },
-    { name: "总校官网",     img: "resource/总校官网.png",   href: "https://www.cuz.edu.cn/" },
+    { name: "媒体工程学院", img: "assets/campus-mtgc.webp", href: "https://mtgc.cuz.edu.cn/" },
+    { name: "总校官网",     img: "assets/campus-cuz.webp",  href: "https://www.cuz.edu.cn/" },
   ];
   /* ================================================= */
 
@@ -286,8 +297,9 @@
     const h = 180 / N;                            // 每个扇区半角
     const clip = N === 1 ? 'none' : `polygon(50% 50%, ${pt(c - h)}, ${pt(c)}, ${pt(c + h)})`;
     const c2 = CAMPUSES[i];
-    html += `<a class="sector" href="${c2.href}" aria-label="${UNIV}${c2.name}" style="clip-path: ${clip}">`
-          + `<img src="${c2.img}" alt="" width="1440" height="900">`
+    const bg = LQIP[c2.img]; // 模糊占位底图（内联，零请求）
+    html += `<a class="sector" href="${c2.href}" aria-label="${UNIV}${c2.name}" style="clip-path: ${clip}${bg ? `; background-image: url(${bg})` : ''}">`
+          + `<img src="${c2.img}" alt="" width="1920" height="1090">`
           + `<span class="sector-label" style="${labelPos(c, D)}"><small>${UNIV}</small><b>${c2.name}</b></span></a>`;
   }
   for (let i = 0; i < N; i++) {                   // 射线 = 相邻扇区的边界
@@ -295,6 +307,12 @@
     html += `<i class="ray" style="--a: ${b.toFixed(2)}deg"></i>`;
   }
   wheel.innerHTML = html;
+
+  // 清晰截图加载完再加 .loaded 触发淡入；缓存已就绪的直接显示
+  wheel.querySelectorAll('img').forEach(img => {
+    if (img.complete) img.classList.add('loaded');
+    else img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+  });
 
   const ring = reduce ? null : document.querySelector('.ring').animate(
     [{ transform: 'rotate(0turn)' }, { transform: 'rotate(1turn)' }],
