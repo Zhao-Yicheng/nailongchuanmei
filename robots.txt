@@ -1,0 +1,6 @@
+# 奶龙传媒学院 · 爬虫策略：允许所有搜索引擎和爬虫抓取全站
+User-agent: *
+Allow: /
+
+# ⚠️ 把下面这行的域名换成你的线上域名，再到百度/谷歌站长平台提交 sitemap
+Sitemap: https://www.example.com/sitemap.xml
