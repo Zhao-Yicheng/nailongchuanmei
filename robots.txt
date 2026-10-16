@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # ⚠️ 把下面这行的域名换成你的线上域名，再到百度/谷歌站长平台提交 sitemap
-Sitemap: https://xn--dpqu5wnyaiyf17sktl.com/sitemap.xml
+Sitemap: https://www.xn--dpqu5wnyaiyf17sktl.com/sitemap.xml
