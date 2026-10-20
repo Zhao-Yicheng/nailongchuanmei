@@ -17,7 +17,6 @@
 <meta property="og:image" content="assets/og.jpg">
 <meta name="twitter:card" content="summary">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preload" as="image" type="image/webp" href="assets/ring.webp">
 <link rel="preload" as="image" type="image/webp" href="assets/core.webp">
 <link rel="preload" as="image" type="image/webp" href="assets/campus-mtgc.webp">
 <link rel="preload" as="image" type="image/webp" href="assets/campus-cuz.webp">
@@ -31,7 +30,6 @@
     --ink: #fece0e;
     --track: rgba(254, 206, 14, .22);
     --card: #ffffff;
-    --size: min(64vw, 44vh, 340px);
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark) {
@@ -67,14 +65,16 @@
   }
   .choosing main { opacity: 0; transform: scale(1.08); pointer-events: none; }
 
-  /* 开场：白底圆盘 + 旋转文字环 + 不转的中心奶龙，外面一圈进度条 */
-  .badge { position: relative; width: var(--size); aspect-ratio: 1; }
-  .badge::before { content: ""; position: absolute; inset: 1.4%; border-radius: 50%; background: #fff; }
-  .badge img { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .progress { position: absolute; inset: -5.5%; width: 111%; height: 111%; transform: rotate(-90deg); overflow: visible; }
-  .progress circle { fill: none; stroke-width: 1.1; stroke-linecap: round; }
-  .progress .track { stroke: var(--track); }
-  .progress .bar { stroke: var(--ink); stroke-dasharray: 100; stroke-dashoffset: 100; }
+  /* 开场：校徽条（左字不动）+ 红色校徽从左到右变奶龙黄，下方进度条 */
+  .brand { width: clamp(260px, 64vw, 430px); }
+  .logo-box { position: relative; }
+  .logo-box picture { display: block; }
+  .logo-box img { display: block; width: 100%; height: auto; }
+  .sweep-pic { position: absolute; inset: 0; }
+  .sweep { clip-path: inset(0 100% 0 0); }
+  .base-pic { clip-path: inset(0 0 0 0); }
+  .bar-track { height: 4px; margin-top: 22px; border-radius: 999px; background: var(--track); overflow: hidden; }
+  .bar { display: block; height: 100%; border-radius: inherit; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; }
 
   .copy { display: flex; flex-direction: column; align-items: center; gap: 10px; }
   h1 { font-size: clamp(26px, 7vw, 40px); font-weight: 800; letter-spacing: .12em; padding-left: .12em; }
@@ -182,15 +182,17 @@
     font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
   }
 
-  .run .badge { animation: pop .7s cubic-bezier(.34, 1.56, .64, 1) backwards; }
-  .run .core { animation: breathe 1.8s ease-in-out .7s infinite; }
-  .run .bar { animation: fill var(--delay) linear forwards; }
+  .run .brand { animation: pop .7s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+  .run .sweep { animation: sweep 1.8s cubic-bezier(.4, 0, .2, 1) .2s forwards; }
+  .run .base-pic { animation: hidebase 1.8s cubic-bezier(.4, 0, .2, 1) .2s forwards; }
+  .run .bar { animation: fillbar var(--delay) linear forwards; }
   .run .copy { animation: rise .5s ease-out .15s backwards; }
   .paused .bar { animation-play-state: paused; }
 
   @keyframes pop { from { transform: scale(.55) rotate(-25deg); opacity: 0; } }
-  @keyframes breathe { 50% { transform: scale(1.03); } }
-  @keyframes fill { to { stroke-dashoffset: 0; } }
+  @keyframes sweep { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes hidebase { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 0 100%); } }
+  @keyframes fillbar { to { transform: scaleX(1); } }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
   @keyframes dot { 0%, 100% { opacity: .25; transform: none; } 40% { opacity: 1; transform: translateY(-.25em); } }
   @keyframes ray { to { transform: rotate(var(--a)) scaleX(1); } }
@@ -199,7 +201,9 @@
   @keyframes unspin { to { rotate: -360deg; } }
 
   @media (prefers-reduced-motion: reduce) {
-    .run .badge, .run .core, .run .copy, .dots i, .about[open] { animation: none; }
+    .run .brand, .run .sweep, .run .base-pic, .run .copy, .dots i, .about[open] { animation: none; }
+    .run .sweep { clip-path: inset(0 0 0 0); } /* 减动效：直接显示黄色成品 */
+    .run .base-pic { clip-path: inset(0 0 0 100%); } /* 减动效：红底直接隐藏 */
     .choosing .ray { animation: none; transform: rotate(var(--a)); }
     .choosing .hub { animation: none; transform: translate(-50%, -50%); }
     main, .sectors, .sector, .sector img, .sector-label { transition: none !important; }
@@ -212,13 +216,18 @@
 <body>
 <main>
   <div class="wrap" aria-hidden="true">
-    <div class="badge">
-      <svg class="progress" viewBox="0 0 100 100">
-        <circle class="track" cx="50" cy="50" r="49"/>
-        <circle class="bar" cx="50" cy="50" r="49" pathLength="100"/>
-      </svg>
-      <img class="ring" src="assets/ring.webp" alt="" width="720" height="720">
-      <img class="core" src="assets/core.webp" alt="" width="720" height="720">
+    <div class="brand">
+      <div class="logo-box">
+        <picture class="base-pic">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.png">
+          <img class="logo" src="assets/logo.png" alt="" width="326" height="57">
+        </picture>
+        <picture class="sweep-pic">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark-yellow.png">
+          <img class="logo sweep" src="assets/logo-yellow.png" alt="" width="372" height="64">
+        </picture>
+      </div>
+      <div class="bar-track"><i class="bar"></i></div>
     </div>
   </div>
   <div class="copy">
@@ -260,7 +269,6 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const DELAY = reduce ? 1200 : 2600; // 进度条走满的时间，之后切到选校区（ms）
   const EXIT = reduce ? 0 : 450;      // 选中扇区后的离场动画时长（ms）
-  const SPIN = 4000;                  // 文字环转一圈（ms）
   const CLICK_GUARD = 350;            // 扇区刚出现时忽略点击，免得「跳过动画」的那一下直接点进某个校区
 
   /* ==================== 校区配置 ====================
@@ -320,11 +328,6 @@
     else img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
   });
 
-  const ring = reduce ? null : document.querySelector('.ring').animate(
-    [{ transform: 'rotate(0turn)' }, { transform: 'rotate(1turn)' }],
-    { duration: SPIN, iterations: Infinity }
-  );
-
   const sectorsNav = document.querySelector('.sectors');
   const sectors = [...document.querySelectorAll('.sector')];
   const aboutBtn = document.getElementById('about-btn');
@@ -345,7 +348,6 @@
     sectorsNav.style.setProperty('--spin-at', Math.random().toFixed(4)); // 转盘的随机初始角度
     void body.offsetWidth; // 重新触发 CSS 动画
     body.classList.add('run');
-    if (ring) ring.play();
     arm(DELAY);
   }
 
@@ -355,7 +357,6 @@
     clearTimeout(timer);
     chooseAt = performance.now();
     body.classList.add('choosing');
-    if (ring) setTimeout(() => state !== 'intro' && ring.pause(), 500); // 开场淡出后就不用再转了
     if (viaKey === true) sectors[0].focus();
   }
 
