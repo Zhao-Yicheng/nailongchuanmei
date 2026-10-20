@@ -152,13 +152,15 @@
 
   /* 右下角「关于」：开场阶段打开时暂停倒计时 */
   .about-btn {
-    position: fixed; z-index: 2; right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom));
-    padding: 8px 10px; border: 0; border-radius: 999px; background: none; color: var(--muted);
-    font: inherit; font-size: 13px; cursor: pointer;
-    text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
-    transition: color .2s, background-color .2s, text-decoration-color .2s, opacity .3s;
+    position: fixed; z-index: 2; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom));
+    padding: 10px 16px; border: 0; border-radius: 999px; background: none; color: var(--muted);
+    font: inherit; font-size: 15px; cursor: pointer;
+    transition: color .2s, background-color .2s, transform .2s, opacity .3s;
   }
-  .about-btn:hover, .about-btn:focus-visible { color: var(--fg); text-decoration-color: currentColor; }
+  .about-btn:hover, .about-btn:focus-visible {
+    color: var(--fg); background: var(--track); transform: translateY(-2px);
+  }
+  .about-btn:active { transform: translateY(0); }
   .choosing .about-btn { padding: 6px 14px; background: rgba(20, 16, 5, .6); color: #fff; }
   .leaving .about-btn { opacity: 0; }
   .about {
