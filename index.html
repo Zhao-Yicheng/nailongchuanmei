@@ -182,17 +182,22 @@
     font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
   }
 
-  .run .brand { animation: pop .7s cubic-bezier(.34, 1.56, .64, 1) backwards; }
-  .run .sweep { animation: sweep 1.8s cubic-bezier(.4, 0, .2, 1) .2s forwards; }
-  .run .base-pic { animation: hidebase 1.8s cubic-bezier(.4, 0, .2, 1) .2s forwards; }
-  .run .bar { animation: fillbar var(--delay) linear forwards; }
+  /* 阶段A（.run）：进度条爬向前 30%，等待两张 logo 解码；logo 藏着不出场 */
+  .run .brand { opacity: 0; }
+  .run .bar { animation: fillA 3.5s ease-out forwards; }
   .run .copy { animation: rise .5s ease-out .15s backwards; }
-  .paused .bar { animation-play-state: paused; }
+  /* 阶段B（.ready）：logo 解码完成 → 进度条走完剩余 70%（固定时长），logo 同步登场、同步结束 */
+  .ready .brand { opacity: 1; animation: pop .7s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+  .ready .bar { animation: fillbar var(--delay) linear forwards; }
+  .ready .sweep { animation: sweep var(--delay) cubic-bezier(.4, 0, .2, 1) forwards; }
+  .ready .base-pic { animation: hidebase var(--delay) cubic-bezier(.4, 0, .2, 1) forwards; }
+  .paused .bar, .paused .sweep, .paused .base-pic { animation-play-state: paused; }
 
   @keyframes pop { from { transform: scale(.55) rotate(-25deg); opacity: 0; } }
   @keyframes sweep { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
   @keyframes hidebase { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 0 100%); } }
-  @keyframes fillbar { to { transform: scaleX(1); } }
+  @keyframes fillA { to { transform: scaleX(.3); } }
+  @keyframes fillbar { from { transform: scaleX(var(--bar-from, 0)); } to { transform: scaleX(1); } }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
   @keyframes dot { 0%, 100% { opacity: .25; transform: none; } 40% { opacity: 1; transform: translateY(-.25em); } }
   @keyframes ray { to { transform: rotate(var(--a)) scaleX(1); } }
@@ -201,9 +206,11 @@
   @keyframes unspin { to { rotate: -360deg; } }
 
   @media (prefers-reduced-motion: reduce) {
-    .run .brand, .run .sweep, .run .base-pic, .run .copy, .dots i, .about[open] { animation: none; }
-    .run .sweep { clip-path: inset(0 0 0 0); } /* 减动效：直接显示黄色成品 */
-    .run .base-pic { clip-path: inset(0 0 0 100%); } /* 减动效：红底直接隐藏 */
+    .run .bar { animation: none; }
+    .run .brand, .ready .brand { opacity: 1; }
+    .run .brand, .run .sweep, .run .base-pic, .run .copy, .ready .sweep, .ready .base-pic, .dots i, .about[open] { animation: none; }
+    .ready .sweep { clip-path: inset(0 0 0 0); } /* 减动效：直接显示黄色成品 */
+    .ready .base-pic { clip-path: inset(0 0 0 100%); } /* 减动效：红底直接隐藏 */
     .choosing .ray { animation: none; transform: rotate(var(--a)); }
     .choosing .hub { animation: none; transform: translate(-50%, -50%); }
     main, .sectors, .sector, .sector img, .sector-label { transition: none !important; }
@@ -267,7 +274,7 @@
 (() => {
   const stay = new URLSearchParams(location.search).has('stay'); // 演示用：选了校区也不跳转，重新播放
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const DELAY = reduce ? 1200 : 2600; // 进度条走满的时间，之后切到选校区（ms）
+  const DELAY = reduce ? 1200 : 2450; // 阶段B固定时长：进度条后 70% + logo 扫色（ms）
   const EXIT = reduce ? 0 : 450;      // 选中扇区后的离场动画时长（ms）
   const CLICK_GUARD = 350;            // 扇区刚出现时忽略点击，免得「跳过动画」的那一下直接点进某个校区
 
@@ -343,13 +350,28 @@
 
   function start() {
     state = 'intro';
-    body.classList.remove('run', 'choosing', 'leaving', 'paused');
+    body.classList.remove('run', 'ready', 'choosing', 'leaving', 'paused');
     sectors.forEach(a => a.classList.remove('picked'));
     sectorsNav.style.setProperty('--spin-at', Math.random().toFixed(4)); // 转盘的随机初始角度
     void body.offsetWidth; // 重新触发 CSS 动画
     body.classList.add('run');
-    arm(DELAY);
+    if (logosDone) markReady(); // 图片早已解码（如 ?stay 重播）：直接进入阶段B
   }
+
+  /* 阶段A → B 的切换：两张 logo 都解码完成后，进度条从当前位置走完剩余部分（固定时长），logo 同步登场 */
+  let logosDone = false;
+  function markReady() {
+    if (state !== 'intro' || body.classList.contains('ready')) return;
+    logosDone = true;
+    const t = getComputedStyle(document.querySelector('.bar')).transform;
+    const sx = t === 'none' ? 0 : Math.max(0, parseFloat(t.slice(7, -1).split(',')[0]) || 0);
+    body.style.setProperty('--bar-from', sx.toFixed(4)); // fillbar 从进度条当前位置无缝续走
+    body.classList.add('ready');
+    if (!body.classList.contains('paused')) arm(DELAY); // 「关于」开着时先不倒计时，关闭后再继续
+  }
+  Promise.all([...document.querySelectorAll('.logo-box img')].map(i => i.decode().catch(() => {})))
+    .then(markReady);
+  setTimeout(markReady, 4000); // decode() 迟迟不返回的兜底
 
   function choose(viaKey) {
     if (state !== 'intro') return;
@@ -387,7 +409,7 @@
     if (state === 'leaving') return;
     if (state === 'intro') {
       clearTimeout(timer);
-      remaining = Math.max(0, deadline - performance.now());
+      remaining = deadline ? Math.max(0, deadline - performance.now()) : DELAY; // 阶段A还没走完时按整段B计
       body.classList.add('paused');
     }
     about.showModal();
@@ -395,7 +417,8 @@
   about.addEventListener('close', () => {
     if (!body.classList.contains('paused')) return;
     body.classList.remove('paused');
-    if (state === 'intro') arm(remaining);
+    if (state !== 'intro') return;
+    if (body.classList.contains('ready')) arm(remaining); // 还没 ready 的话，markReady 解锁后会自己 arm
   });
   about.addEventListener('click', e => { if (e.target === about) about.close(); }); // 点遮罩关闭
 
